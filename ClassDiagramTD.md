@@ -4,75 +4,91 @@ Title: Class Diagram Tower Defense
 
 ```mermaid
 classDiagram
-    class GameManager {
-        - int playerHealth
-        - int resources
-        + startGame()
-        + endGame()
-        + updateResources(int amount)
-        + takeDamage(int damage)
+    class LevelManager {
+        - static LevelManager main
+        - Transform startPoint
+        - Transform[] path
+        - int currency
+        + IncreaseCurrency(int amount)
+        + bool SpendCurrency(int amount)
+    }
+
+    class BuildManager {
+        - static BuildManager main
+        - Tower[] towers
+        - int selectedBuild
+        + Tower GetSelectedBuild()
+        + void SetSelectedBuild(int selectedBuildIndex)
     }
 
     class Tower {
+        - string name
         - int cost
-        - float range
+        - GameObject prefab
+        + Tower(string name, int cost, GameObject prefab)
+    }
+
+    class Plot {
+        - SpriteRenderer sr
+        - Color hoverColor
+        - GameObject build
+        - Color startColor
+        + void OnMouseEnter()
+        + void OnMouseExit()
+        + void OnMouseDown()
+    }
+
+    class Archer {
+        - LayerMask EnemyMask
+        - GameObject bulletPrefab
+        - Transform firePoint
+        - float targetingRange
         - float fireRate
-        + placeTower(Vector3 position)
-        + attackEnemy(Enemy target)
+        - Transform target
+        - float fireCooldown
+        + void Update()
+        + void FindTarget()
+        + void Shoot()
     }
 
-    class SniperTower {
-        - float zoomLevel
-        + specialAttack()
-    }
-    Tower <|-- SniperTower
-
-    class Enemy {
-        - float speed
-        - int health
-        - int damage
-        + move()
-        + takeDamage(int amount)
-        + onDeath()
+    class EnemyMovement {
+        - Rigidbody2D rb
+        - Animator anim
+        - EnemySpawner enemySpawner
+        - float moveSpeed
+        - Transform target
+        - int pathIndex
+        + void Initialize(EnemySpawner spawner)
+        + void Update()
+        + void FixedUpdate()
     }
 
-    class FastEnemy {
-        - float extraSpeed
+    class Health {
+        - int hitPoints
+        - Animator anim
+        - int currencyWorth
+        + UnityEvent onDeath
+        + void TakeDamage(int damage)
     }
-    Enemy <|-- FastEnemy
 
-    class ArmoredEnemy {
-        - int armor
+    class Bullet {
+        - Rigidbody2D rb
+        - float bulletSpeed
+        - int bulletDamage
+        - Transform target
+        + void SetTarget(Transform target)
+        + void FixedUpdate()
+        + void OnCollisionEnter2D(Collision2D collision)
     }
-    Enemy <|-- ArmoredEnemy
 
-    class HealerEnemy {
-        + heal(Enemy target)
-    }
-    Enemy <|-- HealerEnemy
+    %% Relationships
+    LevelManager <.. Plot : uses
+    LevelManager <.. Archer : uses
+    BuildManager <.. Plot : uses
+    BuildManager <.. Tower : uses
+    Plot o-- Tower : "builds"
+    Archer o-- Bullet : "fires"
+    Bullet <.. Health : damages
+    EnemyMovement <.. LevelManager : uses path
+    Health <.. LevelManager : increases currency
 
-    class WaveSystem {
-        - List<Enemy> activeEnemies
-        + startNextWave()
-        + spawnEnemy()
-    }
-    GameManager ..> WaveSystem
-
-    class FieldOfView {
-        - float angle
-        - float radius
-        + detectEnemies()
-    }
-    Tower ..> FieldOfView
-    Enemy ..> FieldOfView
-
-    class Projectile {
-        - float speed
-        - int damage
-        + move()
-        + hitTarget(Enemy target)
-    }
-    Tower ..> Projectile
-
-    GameManager ..> Tower
-    GameManager ..> Enemy
