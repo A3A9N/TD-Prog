@@ -4,91 +4,89 @@ Title: Class Diagram Tower Defense
 
 ```mermaid
 classDiagram
-    class LevelManager {
-        - static LevelManager main
-        - Transform startPoint
-        - Transform[] path
-        - int currency
-        + IncreaseCurrency(int amount)
-        + bool SpendCurrency(int amount)
-    }
-
-    class BuildManager {
-        - static BuildManager main
-        - Tower[] towers
-        - int selectedBuild
-        + Tower GetSelectedBuild()
-        + void SetSelectedBuild(int selectedBuildIndex)
-    }
-
-    class Tower {
-        - string name
-        - int cost
-        - GameObject prefab
-        + Tower(string name, int cost, GameObject prefab)
-    }
-
-    class Plot {
-        - SpriteRenderer sr
-        - Color hoverColor
-        - GameObject build
-        - Color startColor
-        + void OnMouseEnter()
-        + void OnMouseExit()
-        + void OnMouseDown()
-    }
-
-    class Archer {
-        - LayerMask EnemyMask
-        - GameObject bulletPrefab
-        - Transform firePoint
-        - float targetingRange
-        - float fireRate
-        - Transform target
-        - float fireCooldown
+    class EnemySpawner {
+        - GameObject[] enemyPrefabs
+        - int baseEnemies
+        - float enemiesPerSecond
+        - float timeBetweenWaves
+        - float difficultyScalingFactor
+        - int currentWave
+        - float timeSinceLastSpawn
+        - int enemiesAlive
+        - int enemiesLeftToSpawn
+        - bool isSpawning
+        + UnityEvent onEnemyDestroy
+        + void Awake()
+        + void Start()
         + void Update()
-        + void FindTarget()
-        + void Shoot()
+        + void EnemyDestroyed()
+        + IEnumerator StartWave()
+        + void EndWave()
+        + void SpawnEnemy()
+        + int EnemiesPerWave()
+    }
+
+    class MainMenu {
+        + void PlayGame()
+        + void OpenSettings()
+        + void QuitGame()
+    }
+
+    class Menu {
+        - TextMeshProUGUI currencyUI
+        - Animator anim
+        - bool isMenuOpen
+        + void ToggleMenu()
+        + void OnGUI()
+        + void SetSelected()
+    }
+
+    class MenuMovement {
+        - float mousePosX
+        - float mousePosY
+        + void Start()
+        + void Update()
+    }
+
+    class GameMusicManager {
+        - AudioSource gameMusic
+        - float fadeDuration
+        - float targetVolume
+        + void Start()
+        + IEnumerator FadeIn(AudioSource audioSource, float duration, float targetVolume)
+    }
+
+    class LevelManager {
+        + static LevelManager main
+        + Transform startPoint
+        + int currency
     }
 
     class EnemyMovement {
-        - Rigidbody2D rb
-        - Animator anim
-        - EnemySpawner enemySpawner
-        - float moveSpeed
-        - Transform target
-        - int pathIndex
         + void Initialize(EnemySpawner spawner)
-        + void Update()
-        + void FixedUpdate()
+        + void AnimationUpdate()
     }
 
-    class Health {
-        - int hitPoints
-        - Animator anim
-        - int currencyWorth
-        + UnityEvent onDeath
-        + void TakeDamage(int damage)
+    class Archer {
+        - Bullet bulletPrefab
+        + void Shoot()
     }
 
     class Bullet {
-        - Rigidbody2D rb
-        - float bulletSpeed
-        - int bulletDamage
-        - Transform target
-        + void SetTarget(Transform target)
-        + void FixedUpdate()
-        + void OnCollisionEnter2D(Collision2D collision)
+        + void Move()
+        + void OnCollision()
     }
 
-    %% Relationships
-    LevelManager <.. Plot : uses
-    LevelManager <.. Archer : uses
-    BuildManager <.. Plot : uses
-    BuildManager <.. Tower : uses
-    Plot o-- Tower : "builds"
-    Archer o-- Bullet : "fires"
-    Bullet <.. Health : damages
-    EnemyMovement <.. LevelManager : uses path
-    Health <.. LevelManager : increases currency
+    class Health {
+        + UnityEvent onDeath
+        + void TakeDamage()
+    }
 
+    EnemySpawner --> EnemyMovement : Spawns
+    EnemySpawner --> Health : Registers Death
+    EnemySpawner --> LevelManager : Accesses StartPoint
+    MainMenu --> LevelManager : Accesses Currency
+    Menu --> LevelManager : Accesses Currency
+    Menu --> Animator : Controls
+    GameMusicManager --> AudioSource : Controls Volume
+    Archer --> Bullet : Fires
